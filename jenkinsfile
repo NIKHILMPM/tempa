@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "ramachandrampm/node-app"
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/NIKHILMPM/tempa.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                docker build -t $IMAGE_NAME:test .
+                '''
+            }
+        }
+
+        stage('Docker Login & Push') {
+            steps {
+                withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
+                    sh '''
+                    docker push $IMAGE_NAME:test
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                export KUBECONFIG=/var/lib/jenkins/.kube/config
+                kubectl get nodes
+                kubectl apply -f k8s/
+                '''
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "✅ CI/CD pipeline completed successfully"
+        }
+        failure {
+            echo "❌ CI/CD pipeline failed"
+        }
+    }
+}
