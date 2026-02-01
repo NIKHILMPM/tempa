@@ -8,7 +8,7 @@ pipeline {
 
     stages {
 
-        stage('Checkout the code in github repo') {
+        stage('Checkout the code in github repository') {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/NIKHILMPM/tempa.git'
